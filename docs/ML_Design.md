@@ -19,14 +19,28 @@ To formulate the problem more specifically, we aim to build a system that:
 
 ## **2. Metrics and losses**
 
-### Offline & Online metrics
-- What are the key business metrics?
-- What are the model performance metrics?
+### Metrics
 
+For metrics we consider both online and offline approaches to evaluate system performance. Online metrics measure real user behavior and satisfaction, while offline metrics assess retrieval quality using labeled datasets.
+
+#### Online metrics
+- Time to First Email Click
+  - Time spent on the search results page before clicking an email or abandoning.
+- Post Query Clicks
+  - The number of distinct emails clicked by a user after submitting a search query.
+
+#### Offline metrics
+- Precision@k, Recall@k
+- HitRate@k
+- NDCG@k
 
 ### Loss functions
-- What loss functions will be used?
-- How do they relate to business metrics?
+For loss functions we will experiment with:
+- **Triplet loss**;
+- **Info-NCE loss**;
+- **Positive/Negative Cross-Entropy loss**.
+
+These loss functions aim to bring semantically similar queries and emails closer together in the embedding space while pushing dissimilar pairs apart.
 
 ## **3. Dataset**
 
