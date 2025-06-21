@@ -1,1 +1,1 @@
-# recipe-vector-search
+# ml-email-search
