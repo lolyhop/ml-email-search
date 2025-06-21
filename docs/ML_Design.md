@@ -30,31 +30,32 @@ For metrics we consider both online and offline approaches to evaluate system pe
   - The number of distinct emails clicked by a user after submitting a search query.
 
 #### Offline metrics
-- Precision@k, Recall@k
-- HitRate@k
-- NDCG@k
+- Precision@k, Recall@k;
+- HitRate@k;
+- NDCG@k.
 
 ### Loss functions
 For loss functions we will experiment with:
-- **Triplet loss**;
-- **Info-NCE loss**;
-- **Positive/Negative Cross-Entropy loss**.
+- Triplet loss;
+- Info-NCE loss;
+- Positive/Negative Cross-Entropy loss.
 
 These loss functions aim to bring semantically similar queries and emails closer together in the embedding space while pushing dissimilar pairs apart.
 
 ## **3. Dataset**
 
 ### Data Sources
-- What data can be used to build system?
-- Do data have any issues? What are the data quality issues? Are data fresh?
+Since we build new search engine we don't have any intrinsic data. However, we have an access to open-source datasets, so we will consider [Enron Email Dataset](https://www.kaggle.com/datasets/wcukierski/enron-email-dataset) as our baseline. It contains 500,000+ unlabeled emails in English. That means that we have no information about queries and relevant emails for them. 
+
+The dataset also have some issues including:
+- Corrupted HTML tags;
+- Corrupted metadata linked to emails;
+- Emails belong to only Enror Company employees.
 
 ### Data Labeling
-- How the train/test dataset will be crafted?
+Since our dataset doesn't have any labels to learn from, we will generate synthetic data. For each email, we will generate 3 query examples and use them as positive pairs. To generate synthetic queries, we will use the DeepSeek R1 model from the API.
 
-
-### ETL Pipeline
-- Describe how the data will be processed
-
+To craft negative pairs, we will use a random sampling strategy, where random emails (except the ones chosen as positives) are treated as negatives.
 
 ## **4. Validation Schema**
 - Describe which steps we took to validate the correctness of model building (how we prevented data leakage for example)
