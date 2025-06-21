@@ -13,6 +13,7 @@ There are many situations where users want to find a specific email in their mai
 Despite the remarkable advances in modern ML systems (Large Reasoning Models, Agentic AI), fundamental tasks like email search remain surprisingly challenging. Current email search engines rely primarily on basic keyword matching and simple filters, failing to understand semantic meaning. This creates a significant gap between the sophisticated AI capabilities available today and the practical tools users interact with daily for essential tasks like email retrieval.
 
 To formulate the problem more specifically, we aim to build a system that:
+- accepts queries in arbitrary language (english, russian, etc.) and returns the most semantically relevant emails from a user's mailbox;
 - performs semantic search beyond simple keyword matching to find contextually relevant emails;
 - provides fast and accurate retrieval from large email datasets.
 
