@@ -63,7 +63,6 @@ class IVFIndex(BaseIndex):
             quantizer = faiss.IndexFlatL2(self.config.dimension)
             metric = faiss.METRIC_L2
 
-        # Apply quantization if specified
         if self.config.quantization == "pq":
             self.index = faiss.IndexIVFPQ(
                 quantizer,
