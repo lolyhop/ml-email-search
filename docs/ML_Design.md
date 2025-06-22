@@ -58,7 +58,12 @@ Since our dataset doesn't have any labels to learn from, we will generate synthe
 To craft negative pairs, we will use a random sampling strategy, where random emails (except the ones chosen as positives) are treated as negatives.
 
 ## **4. Validation Schema**
-- Describe which steps we took to validate the correctness of model building (how we prevented data leakage for example)
+To validate our model building process and prevent data leakage:
+- We split the dataset into training (80%), validation (10%), and test (10%) subsets by unique email IDs.
+- Synthetic queries are only generated for the training and validation sets.
+- During training, emails and their corresponding synthetic queries are paired, and cross-validation is used to tune hyperparameters.
+- For each experiment, we ensure no query or email overlap across train and test sets.
+- Embedding leakage is prevented by re-initializing query generators for each fold.
 
 ## **5. Baseline Solution**
 For our baseline solution, we will test two model architectures:
@@ -68,27 +73,38 @@ For our baseline solution, we will test two model architectures:
 For the baseline, we do not anticipate strong results. However, since we aim to replace traditional lexical systems like BM25, the quality of our post-baseline models should be significantly better.
 
 ##  **6. Error Analysis**
-- How will we analyze learning curves?
-- How will we handle overfitting/underfitting?
-
+To improve model robustness:
+- **Learning Curves**: Track training/validation loss and metrics (Recall@k, NDCG@k) over time.
+- **Overfitting/Underfitting**: Use early stopping and dropout. Analyze gaps between train/test curves.
+- **Manual Review**: Create a dashboard to inspect hard cases.
 
 ## **7. Training Pipeline**
-- What frameworks will we use to train models?
-- How will we tune the hyperparams?
-- What are the hardware requirements?
-- What metrics will we log?
-- How will we track the experiments results?
+- **Frameworks**: PyTorch Lightning, HuggingFace Transformers, Faiss for vector indexing.
+- **Hyperparameters**: Tune learning rate, batch size, dropout, embedding dimension using Optuna.
+- **Hardware**: 1 GPU, 32GB RAM, 500GB SSD.
+- **Metrics**: Log loss, Recall@k, NDCG@k, mean embedding norm.
+- **Experiment Tracking**: Use Weights & Biases (WandB) for experiment logging and hyperparameter sweeps.
 
 ## **8. Measuring & Reporting**
-- What is the testing strategy? (A/B test)
-- How will we split traffic?
-- What are the success criteria?
-- What reports will be generated?
+- **Testing Strategy**: A/B test comparing current keyword-based system vs. our semantic engine.
+- **Traffic Split**: 80% control (keyword), 20% treatment (semantic).
+- **Success Criteria**:  TODO: adjust w.r.t. expectations
+  - >10% improvement in Recall@5
+  - 20% reduction in Time to First Email Click
+  - >5% increase in Post Query Clicks
+- **Reports**:
+  - Confusion matrix and embedding drift visualizations
+  - TODO: extend the list of options
 
 ## **9. Integration**
-- What APIs will we expose?
-- What are the interfaces?
-- What are the SLAs?
-- What are the fallback plans?
+- **APIs**:
+  - `POST /search`: Accepts query and returns top-k emails.
+  - `POST /train`: Triggers model fine-tuning on new user data.
+  - `GET /status`: Healthcheck and versioning.
+- **Interfaces**: TODO: complete
+- **SLAs**: Response time < 300ms, 99.9% uptime.
+- **Fallback**:
+  - Revert to keyword search if semantic engine fails.
+  - Use cached results if vector DB times out.
 
 TODO: Put & Visualise UML Diagram from Assignment 3 second part here...
