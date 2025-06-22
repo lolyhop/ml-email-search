@@ -80,7 +80,7 @@ To validate our model building process and prevent data leakage:
 For our baseline solution, we will test two model architectures:
 
 - BM25 (sparse retrieval)
-- Dense Passage Retriever (dense retrieval, transformer-based architecture, pretrained on popular Information Retrieval tasks)
+- Dense Passage Retriever (dense retrieval, transformer-based architecture, pretrained on popular Information Retrieval tasks, e.g BGE-M3, e5-large)
 
 For the baseline, we do not anticipate strong results. However, since we aim to replace traditional lexical systems like BM25, the quality of our post-baseline models should be significantly better.
 
