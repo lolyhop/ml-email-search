@@ -59,11 +59,10 @@ To craft negative pairs, we will use a random sampling strategy, where random em
 
 ## **4. Validation Schema**
 To validate our model building process and prevent data leakage:
-- We split the dataset into training (80%), validation (10%), and test (10%) subsets by unique email IDs.
-- Synthetic queries are only generated for the training and validation sets.
-- During training, emails and their corresponding synthetic queries are paired, and cross-validation is used to tune hyperparameters.
-- For each experiment, we ensure no query or email overlap across train and test sets.
-- Embedding leakage is prevented by re-initializing query generators for each fold.
+- We split the dataset into training (80%), validation (10%), and test (10%) subsets by unique email Message-IDs;
+- Additionally, we implement a temporal split where training data comes from earlier time periods and test data from later periods to simulate real-world deployment conditions;
+- During training, emails and their corresponding synthetic queries are paired, and cross-validation is used to tune hyperparameters;
+- For each experiment, we ensure no query or email overlap across train and val/test sets;
 
 ## **5. Baseline Solution**
 For our baseline solution, we will test two model architectures:
@@ -73,38 +72,45 @@ For our baseline solution, we will test two model architectures:
 For the baseline, we do not anticipate strong results. However, since we aim to replace traditional lexical systems like BM25, the quality of our post-baseline models should be significantly better.
 
 ##  **6. Error Analysis**
-To improve model robustness:
-- **Learning Curves**: Track training/validation loss and metrics (Recall@k, NDCG@k) over time.
-- **Overfitting/Underfitting**: Use early stopping and dropout. Analyze gaps between train/test curves.
-- **Manual Review**: Create a dashboard to inspect hard cases.
+- **Learning Curves**: Track training/validation loss and metrics (Recall@k, NDCG@k) over time;
+- **Overfitting/Underfitting**: Use early stopping and dropout;
+- **Manual Review**: Create a dashboard to inspect hard incorrectly predicted cases.
 
 ## **7. Training Pipeline**
-- **Frameworks**: PyTorch Lightning, HuggingFace Transformers, Faiss for vector indexing.
-- **Hyperparameters**: Tune learning rate, batch size, dropout, embedding dimension using Optuna.
-- **Hardware**: 1 GPU, 32GB RAM, 500GB SSD.
-- **Metrics**: Log loss, Recall@k, NDCG@k, mean embedding norm.
-- **Experiment Tracking**: Use Weights & Biases (WandB) for experiment logging and hyperparameter sweeps.
+- **Frameworks**: PyTorch Lightning, HuggingFace Transformers, Faiss for vector indexing;
+- **Hyperparameters**: Tune learning rate, batch size, dropout, cross-entropy weights and margin size;
+- **Hardware**: 1 GPU, 32GB RAM, 500GB SSD;
+- **Metrics**: Log train/val loss, Recall@k, Precision@k, HitRate@k, NDCG@k, mean embedding norm, grads norm;
+- **Experiment Tracking**: Use Weights & Biases (WandB) or TensorBoard for experiment logging and hyperparameter sweeps.
 
 ## **8. Measuring & Reporting**
-- **Testing Strategy**: A/B test comparing current keyword-based system vs. our semantic engine.
+- **Testing Strategy**: A/B test comparing current keyword-based system (BM-25 retrieval) vs. our new semantic engine.
 - **Traffic Split**: 80% control (keyword), 20% treatment (semantic).
-- **Success Criteria**:  TODO: adjust w.r.t. expectations
-  - >10% improvement in Recall@5
-  - 20% reduction in Time to First Email Click
+- **Success Criteria**:
+  - >10% improvement in Recall@5, >8% improvement in HitRate@5, and >12% improvement in Precision@5
+  - 15% reduction in Time to First Email Click
   - >5% increase in Post Query Clicks
 - **Reports**:
-  - Confusion matrix and embedding drift visualizations
-  - TODO: extend the list of options
+  - P-value plots over time showing statistical significance of key metrics
+  - Confidence intervals for treatment vs control comparisons
+  - Time series plots of Time to First Click and Post Query Clicks
+  - Conversion funnel analysis showing user engagement at each step
+  - Performance degradation alerts if metrics fall below thresholds
 
 ## **9. Integration**
 - **APIs**:
   - `POST /search`: Accepts query and returns top-k emails.
-  - `POST /train`: Triggers model fine-tuning on new user data.
+  - `POST /change_embedding_model`: Updates embedding model for documents and queries separately.
+  - `POST /create_index`: Creates new index with predefined emails.
+  - `POST /add_email`: Adds a single email to the index.
   - `GET /status`: Healthcheck and versioning.
-- **Interfaces**: TODO: complete
-- **SLAs**: Response time < 300ms, 99.9% uptime.
+- **Interfaces**: 
+  - FastAPI Backend with Swagger documentation for REST endpoints;
+  - FAISS for vector storage and similarity search;
+  - PostgreSQL for document metadata and private data storage;
+  - PyTorch Lightning for model inference;
+  - Grafana for performance tracking and monitoring;
+  - Docker for containerization;
+- **SLAs**: Response time < 200ms, 99.9% uptime.
 - **Fallback**:
-  - Revert to keyword search if semantic engine fails.
-  - Use cached results if vector DB times out.
-
-TODO: Put & Visualise UML Diagram from Assignment 3 second part here...
+  - Revert to simpler models (BM-25) if semantic engine fails;
