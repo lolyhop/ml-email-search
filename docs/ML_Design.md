@@ -4,8 +4,8 @@ This document outlines the machine learning system design for Email Search Engin
 
 **Authors:**
 
-- Egor Chernobrovkin (_e.chernobrovkin@innopolis.university_)
-- Alexandra Starikova (_a.nasibullina@innopolis.university_)
+- Egor Chernobrovkin (*e.chernobrovkin@innopolis.university*)
+- Alexandra Starikova (*a.nasibullina@innopolis.university*)
 
 ## **1. Problem Definition**
 
@@ -131,3 +131,9 @@ For the baseline, we do not anticipate strong results. However, since we aim to 
 - **SLAs**: Response time < 200ms, 99.9% uptime.
 - **Fallback**:
   - Revert to simpler models (BM-25) if semantic engine fails;
+
+#### Architecture diagrams
+
+![Email Search Engine Architecture var. 1](EmailSearchEngine.png)
+
+![Email Search Engine Architecture var. 2](PlantUML.png)
