@@ -1,0 +1,104 @@
+@startuml
+skinparam componentStyle rectangle
+skinparam classAttributeIconSize 0
+
+package "API Layer" {
+    class FastAPIService {
+        +search_email(query: str): List[uid]
+        +enrich_emails(ids: List[uid]): List[Email]
+        +pull_logs(timestamp: Tuple[tmstp, tmstp]): Logs
+    }
+
+    class SwaggerDocs {
+        +render_docs(): UI
+    }
+
+    FastAPIService --> SwaggerDocs : uses
+}
+
+package "Retrieval Engines" {
+    abstract class Retriever {
+        +retrieve(query: str): List[Email]
+        +index(emails: List[Email]): void
+    }
+
+    class BM25Retriever {
+        +retrieve(query: str): List[Email]
+        +index(emails: List[Email]): void
+    }
+
+    class DenseRetriever {
+        -embedding_model: TransformerModel
+        +retrieve(query: str): List[Email]
+        +index(emails: List[Email]): void
+        +update_model(model_name: str): void
+    }
+
+    Retriever <|-- BM25Retriever
+    Retriever <|-- DenseRetriever
+}
+
+package "Embedding & Inference" {
+    class TransformerModel {
+        +embed_query(query: List[str]): List[List[float]]
+        +embed_doc(doc: List[str]): List[List[float]]
+        +health(): int
+        +push_model(model_weights: Binary, model_config: JSON, tokenizer_config: JSON): ModelID
+        +update_model(model_id: ModelID): int
+        +get_all_model(): List[Model]
+    }
+
+    class InferenceEngine {
+        -model: TransformerModel
+        +infer(text: str): Vector
+        +evaluate(query: str, emails: List[Email]): Score
+    }
+
+    DenseRetriever --> TransformerModel
+    DenseRetriever --> InferenceEngine
+}
+
+package "Storage Layer" {
+    class FAISSIndex {
+        +add_document(embd: List[float], id: Optional[uid]): uid
+        +search_index(index_id: int, query: List[float], k: int): List[FAISSObj]
+        +create_index(index_name: str, docs: Optional[List[Doc]]): int
+        +delete_index(index_id: int): int
+    }
+
+    class PostgreSQLDB {
+        +add_email(email: Email): int
+        +get_emails(ids: List[uid]): List[Email]
+        +create_collection(col_name: str): int
+        +delete_collection(col_idx: int): int
+    }
+
+    FAISSIndex --> PostgreSQLDB : stores metadata
+}
+
+package "Monitoring & Ops" {
+    class GrafanaDashboard {
+        +track_metrics(): void
+    }
+
+    class DockerContainer {
+        +build_service(): void
+        +run(): void
+    }
+}
+
+package "External Dependencies" {
+    class PyTorchLightning <<external>>
+}
+
+' Associations
+FastAPIService --> Retriever : delegates
+Retriever --> FAISSIndex : indexes/searches
+FastAPIService --> PostgreSQLDB : metadata I/O
+InferenceEngine --> PyTorchLightning : uses
+FastAPIService --> GrafanaDashboard : logs metrics
+DockerContainer --> FastAPIService : deploys
+DockerContainer --> PostgreSQLDB
+DockerContainer --> FAISSIndex
+DockerContainer --> GrafanaDashboard
+@enduml
