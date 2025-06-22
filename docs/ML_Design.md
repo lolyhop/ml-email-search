@@ -103,9 +103,9 @@ For the baseline, we do not anticipate strong results. However, since we aim to 
 - **Testing Strategy**: A/B test comparing current keyword-based system (BM-25 retrieval) vs. our new semantic engine.
 - **Traffic Split**: 80% control (keyword), 20% treatment (semantic).
 - **Success Criteria**:
-  - > 10% improvement in Recall@5, >8% improvement in HitRate@5, and >12% improvement in Precision@5
+  - \>10% improvement in Recall@5, >8% improvement in HitRate@5, and >12% improvement in Precision@5
   - 15% reduction in Time to First Email Click
-  - > 5% increase in Post Query Clicks
+  - \>5% increase in Post Query Clicks
 - **Reports**:
   - P-value plots over time showing statistical significance of key metrics
   - Confidence intervals for treatment vs control comparisons
