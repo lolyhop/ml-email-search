@@ -61,10 +61,11 @@ To craft negative pairs, we will use a random sampling strategy, where random em
 - Describe which steps we took to validate the correctness of model building (how we prevented data leakage for example)
 
 ## **5. Baseline Solution**
-- Which baselines will we use (think of BM-25 and pretrained retriever models from open-source)
-- What are acceptable baseline results?
-- What are the model architectures we will try?
-- What features will we use in baseline models?
+For our baseline solution, we will test two model architectures:
+- BM25 (sparse retrieval)
+- Dense Passage Retriever (dense retrieval, transformer-based architecture, pretrained on popular Information Retrieval tasks)
+
+For the baseline, we do not anticipate strong results. However, since we aim to replace traditional lexical systems like BM25, the quality of our post-baseline models should be significantly better.
 
 ##  **6. Error Analysis**
 - How will we analyze learning curves?
