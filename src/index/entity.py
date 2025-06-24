@@ -1,4 +1,3 @@
-import uuid
 import typing as tp
 from dataclasses import dataclass
 
@@ -7,7 +6,7 @@ from dataclasses import dataclass
 class FaissEntity:
     """Entity representing a document with content for FAISS indexing."""
 
-    id: uuid.UUID
+    id: int
     content: str
     metadata: tp.Optional[tp.Dict[str, tp.Any]] = None
 
@@ -44,7 +43,7 @@ class FaissCorpus:
     def contents(self) -> tp.List[str]:
         return [entity.content for entity in self.entities]
 
-    def get_entity_by_id(self, doc_id: uuid.UUID) -> tp.Optional[FaissEntity]:
+    def get_entity_by_id(self, doc_id: int) -> tp.Optional[FaissEntity]:
         """Get entity by document ID."""
         for entity in self.entities:
             if entity.id == doc_id:

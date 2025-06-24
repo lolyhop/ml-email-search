@@ -2,8 +2,9 @@ import typing as tp
 from dataclasses import dataclass
 
 
-@dataclass(kw_only=True)
+@dataclass
 class IndexConfig:
+    index_name: str
     dimension: int
     metric: tp.Literal["cosine", "l2"] = "cosine"
     quantization: tp.Literal["none", "pq", "sq"] = "none"

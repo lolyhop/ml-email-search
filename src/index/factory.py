@@ -7,22 +7,24 @@ from src.index.indexes import BruteForceIndex, HNSWIndex, IVFIndex
 
 class IndexFactory:
     """Factory for creating index instances."""
-    
+
     _registry: tp.Dict[str, tp.Type[BaseIndex]] = {
         "brute_force": BruteForceIndex,
         "hnsw": HNSWIndex,
         "ivf": IVFIndex,
     }
-    
+
     @classmethod
-    def create(cls, index_type: str, config: IndexConfig) -> BaseIndex:
+    def create(cls, config: IndexConfig) -> BaseIndex:
         """Create an index instance by type."""
-        if index_type not in cls._registry:
+        if config.index_name not in cls._registry:
             available = ", ".join(cls._registry.keys())
-            raise ValueError(f"Unknown index type '{index_type}'. Available: {available}")
-        
-        return cls._registry[index_type](config)
-    
+            raise ValueError(
+                f"Unknown index type '{config.index_name}'. Available: {available}"
+            )
+
+        return cls._registry[config.index_name](config)
+
     @classmethod
     def list_available(cls) -> tp.List[str]:
         """List all available index types."""

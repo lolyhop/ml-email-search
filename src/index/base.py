@@ -1,5 +1,4 @@
 import typing as tp
-import uuid
 from abc import ABC, abstractmethod
 
 import numpy as np
@@ -53,24 +52,35 @@ class BaseIndex(ABC):
     ) -> tp.Tuple[np.ndarray, tp.List[tp.List[tp.Any]]]:
         """Search and return document IDs instead of indices."""
         scores, indices = self.search(query_embeddings, k)
-        
+
         if self.corpus is None:
-            raise RuntimeError("Index was not built from corpus, cannot return document IDs")
-        
-        # Convert indices to document IDs
-        doc_ids: tp.List[uuid.UUID] = []
+            raise RuntimeError(
+                "Index was not built from corpus, cannot return document IDs"
+            )
+
+        doc_ids: tp.List[int] = []
         for query_indices in indices:
-            query_doc_ids = [self.corpus.document_ids[idx] for idx in query_indices if idx < len(self.corpus.document_ids)]
+            query_doc_ids = [
+                self.corpus.document_ids[idx]
+                for idx in query_indices
+                if idx < len(self.corpus.document_ids)
+            ]
             doc_ids.append(query_doc_ids)
-        
+
         return scores, doc_ids
 
     def get_entities_by_indices(self, indices: tp.List[int]) -> tp.List[FaissEntity]:
         """Get original entities by FAISS indices."""
         if self.corpus is None:
-            raise RuntimeError("Index was not built from corpus, cannot return entities")
-        
-        return [self.corpus.entities[i] for i in indices if 0 <= i < len(self.corpus.entities)]
+            raise RuntimeError(
+                "Index was not built from corpus, cannot return entities"
+            )
+
+        return [
+            self.corpus.entities[i]
+            for i in indices
+            if 0 <= i < len(self.corpus.entities)
+        ]
 
     def _prepare_embeddings(self, embeddings: np.ndarray) -> np.ndarray:
         if self.config.metric == "cosine":
