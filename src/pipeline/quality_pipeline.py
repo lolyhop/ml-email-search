@@ -65,16 +65,15 @@ class QualityPipeline(Pipeline):
             embeddings, min(max(self.config.recall_ranks), self.corpus.n_documents)
         )
 
-        print(sota_results)
         # 2. Get results for retrieval using other indexes
         for index in indexes_to_compare:
             index.build_from_corpus(self.corpus, self.embedder)
             embeddings = self.embedder.embed_query(self.config.queries)
-            results = index.search(embeddings, max(self.config.recall_ranks))
+            results = index.search(
+                embeddings, min(max(self.config.recall_ranks), self.corpus.n_documents)
+            )
 
             # 3. Calculate recall@k for each index
-            print(sota_results[1])
-            print(results[1])
             recall_at_k = MetricsCalculator.calculate_recall_at_k(
                 sota_results[1], results[1], self.config.recall_ranks
             )

@@ -25,8 +25,6 @@ class MetricsCalculator:
                 recall = len(gt_set.intersection(pred_set)) / len(gt_set)
                 total_recall += recall
 
-            recalls[k] = (
-                total_recall / len(ground_truth_ids) if ground_truth_ids else 0.0
-            )
+            recalls[k] = total_recall / len(ground_truth_ids)
 
         return recalls
