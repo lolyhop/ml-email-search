@@ -13,6 +13,7 @@ class EmailsDataLoader:
     def __init__(self, dataset_path: str) -> None:
         self.dataset: tp.Optional[pd.DataFrame] = None
         self.dataset_path: str = dataset_path
+        self.preprocessed: bool = False
 
     def _extract_email_data(self, raw_email: str) -> tp.Dict[str, tp.Any]:
         """Extract message ID, content, and date from raw email"""
@@ -49,13 +50,16 @@ class EmailsDataLoader:
         if self.dataset is None:
             raise ValueError("Dataset not loaded")
 
-        extracted_data = self.dataset[raw_email_col].apply(
-            self._extract_email_data
-        )
+        extracted_data = self.dataset[raw_email_col].apply(self._extract_email_data)
 
         self.dataset["message_id"] = extracted_data.apply(lambda x: x["message_id"])
         self.dataset["email_date"] = extracted_data.apply(lambda x: x["date"])
         self.dataset["email_content"] = extracted_data.apply(lambda x: x["content"])
+        self.preprocessed = True
+
+    def get_faiss_dataset(self) -> tp.List[tp.Tuple[int, str]]:
+        assert self.preprocessed is True
+        return [(idx, item["email_content"]) for idx, item in self.dataset.iterrows()]
 
     @classmethod
     def load(cls, dataset_path: str) -> "EmailsDataLoader":

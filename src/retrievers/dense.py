@@ -60,11 +60,11 @@ class DenseEmbedder(Embedder):
             if self.config.normalize:
                 embeddings = torch.nn.functional.normalize(embeddings, p=2, dim=-1)
 
-        return embeddings
+        return embeddings.cpu().float().numpy()
 
     def embed_query(self, query: tp.List[str]) -> tp.Union[np.ndarray, torch.Tensor]:
         assert (
-            self.config.head == "query"
+            self.config.head == "query" or self.config.head == "universal"
         ), "Expected head to be 'query' for query embedding"
         return self._embed_batch(query)
 
@@ -72,6 +72,6 @@ class DenseEmbedder(Embedder):
         self, document: tp.List[str]
     ) -> tp.Union[np.ndarray, torch.Tensor]:
         assert (
-            self.config.head == "doc"
+            self.config.head == "doc" or self.config.head == "universal"
         ), "Expected head to be 'doc' for document embedding"
         return self._embed_batch(document)

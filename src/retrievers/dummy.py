@@ -1,3 +1,4 @@
+import hashlib
 import typing as tp
 
 import torch
@@ -11,22 +12,30 @@ class DummyEmbedder(Embedder):
 
     def __init__(self, config: EmbedderConfig) -> None:
         super().__init__(config)
-        self.rng = np.random.RandomState(42)
+        self.base_seed: int = 42
+
+    def _text_to_seed(self, text: str) -> int:
+        """Convert text to a deterministic seed."""
+        return int(hashlib.md5(text.encode()).hexdigest()[:8], 16)
 
     def initialize(self) -> None:
         """Initialize the dummy embedder (no actual model loading)."""
         self._is_initialized = True
 
     def _generate_random_embeddings(self, texts: tp.List[str]) -> np.ndarray:
-        """Generate random embeddings for the given texts."""
+        """Generate deterministic 'random' embeddings for the given texts."""
         if not self._is_initialized:
             raise RuntimeError(f"{self.__class__.__name__} is not initialized")
 
-        batch_size = len(texts)
+        embeddings = []
+        for text in texts:
+            text_seed = self.base_seed + self._text_to_seed(text)
+            rng = np.random.RandomState(text_seed)
 
-        embeddings = self.rng.normal(0, 1, (batch_size, self.config.head_size)).astype(
-            np.float32
-        )
+            embedding = rng.normal(0, 1, self.config.head_size).astype(np.float32)
+            embeddings.append(embedding)
+
+        embeddings = np.array(embeddings)
 
         if self.config.normalize:
             norms = np.linalg.norm(embeddings, axis=1, keepdims=True)
