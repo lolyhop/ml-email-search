@@ -101,3 +101,50 @@ class IVFIndex(BaseIndex):
     ) -> tp.Tuple[np.ndarray, np.ndarray]:
         query_embeddings = self._prepare_embeddings(query_embeddings)
         return self.index.search(query_embeddings, k)
+
+
+class LSHIndex(BaseIndex):
+
+    def build(self) -> None:
+        self.index = faiss.IndexLSH(self.config.dimension, self.config.lsh_nbits)
+        self._is_trained = True
+
+    def add(self, embeddings: np.ndarray) -> None:
+        embeddings = self._prepare_embeddings(embeddings)
+        self.index.add(embeddings)
+
+    def search(
+        self, query_embeddings: np.ndarray, k: int = 10
+    ) -> tp.Tuple[np.ndarray, np.ndarray]:
+        query_embeddings = self._prepare_embeddings(query_embeddings)
+        return self.index.search(query_embeddings, k)
+
+
+class PQIndex(BaseIndex):
+
+    def build(self) -> None:
+        if self.config.metric == "cosine":
+            self.index = faiss.IndexPQ(
+                self.config.dimension, self.config.pq_m, self.config.pq_bits,
+                faiss.METRIC_INNER_PRODUCT
+            )
+        else:
+            self.index = faiss.IndexPQ(
+                self.config.dimension, self.config.pq_m, self.config.pq_bits,
+                faiss.METRIC_L2
+            )
+
+    def add(self, embeddings: np.ndarray) -> None:
+        embeddings = self._prepare_embeddings(embeddings)
+        
+        if not self._is_trained:
+            self.index.train(embeddings)
+            self._is_trained = True
+            
+        self.index.add(embeddings)
+
+    def search(
+        self, query_embeddings: np.ndarray, k: int = 10
+    ) -> tp.Tuple[np.ndarray, np.ndarray]:
+        query_embeddings = self._prepare_embeddings(query_embeddings)
+        return self.index.search(query_embeddings, k)

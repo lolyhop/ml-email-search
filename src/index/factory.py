@@ -2,7 +2,7 @@ import typing as tp
 
 from src.index.base import BaseIndex
 from src.index.config import IndexConfig
-from src.index.indexes import BruteForceIndex, HNSWIndex, IVFIndex
+from src.index.indexes import BruteForceIndex, HNSWIndex, IVFIndex, LSHIndex, PQIndex
 
 
 class IndexFactory:
@@ -12,6 +12,8 @@ class IndexFactory:
         "brute_force": BruteForceIndex,
         "hnsw": HNSWIndex,
         "ivf": IVFIndex,
+        "lsh": LSHIndex,
+        "pq": PQIndex,
     }
 
     @classmethod

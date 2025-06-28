@@ -55,6 +55,8 @@ class EmailsDataLoader:
         self.dataset["message_id"] = extracted_data.apply(lambda x: x["message_id"])
         self.dataset["email_date"] = extracted_data.apply(lambda x: x["date"])
         self.dataset["email_content"] = extracted_data.apply(lambda x: x["content"])
+        self.dataset = self.dataset.loc[self.dataset["email_content"] != ""]
+
         self.preprocessed = True
 
     def get_faiss_dataset(self) -> tp.List[tp.Tuple[int, str]]:
@@ -71,7 +73,7 @@ class EmailsDataLoader:
             raise FileNotFoundError(f"Dataset file not found: {dataset_path}")
         except pd.errors.EmptyDataError:
             raise ValueError(f"Dataset file is empty: {dataset_path}")
-
+        
         if len(dataset) > MAX_SIZE:
             dataset = dataset.sample(n=MAX_SIZE, random_state=42)
 

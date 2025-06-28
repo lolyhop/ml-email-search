@@ -2,26 +2,22 @@ import os
 
 os.environ["OMP_NUM_THREADS"] = "1"
 
+import time
 import logging
 import typing as tp
-import time
-from collections import defaultdict
 
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
+from tqdm import tqdm
 
 from src.retrievers.base import EmbedderConfig
 from src.index.base import BaseIndex
 from src.index.factory import IndexFactory
 from src.index.config import IndexConfig
-from src.index.entity import FaissEntity, FaissCorpus
 from src.index.indexes import BruteForceIndex
 from src.pipeline.config import QualityPipelineConfig
 from src.pipeline.metrics import MetricsCalculator
 from src.pipeline.pipeline import Pipeline
 from src.data_loader.data_loader import EmailsDataLoader
-from src.pipeline.utils import visualize_comparison
+from src.pipeline.utils import plot_recall_comparison
 
 logger = logging.getLogger(__name__)
 SAVE_REPORTS_PATH = "reports/quality-time"
@@ -81,7 +77,7 @@ class QualityPipeline(Pipeline):
         }
 
         # 2. Get results for retrieval using other indexes
-        for index in indexes_to_compare:
+        for index in tqdm(indexes_to_compare, desc="Comparing indexes"):
             index.build_from_corpus(self.corpus, self.embedder)
             search_start = time.time()
             results = index.search(
@@ -100,24 +96,25 @@ class QualityPipeline(Pipeline):
                 "time_per_query": search_time / len(self.config.queries),
             }
 
-        visualize_comparison(comparison_results, SAVE_REPORTS_PATH)
+        plot_recall_comparison(comparison_results)
 
         return comparison_results
 
 
 if __name__ == "__main__":
     loader = EmailsDataLoader.load(
-        "/Users/chrnegor/Documents/study/ml-email-search/src/data_loader/emails.csv"
+        "/Users/egor/Documents/code/ml-email-search/src/data_loader/emails.csv"
     )
     loader.preprocess(raw_email_col="message")
-    documents: tp.Tuple[int, str] = loader.get_faiss_dataset()
-    documents = documents[:300]  # TODO: Remove it
+    documents: tp.List[tp.Tuple[int, str]] = loader.get_faiss_dataset()[:2000]
     config = QualityPipelineConfig(
         documents=documents,
         queries=["What is the capital of France?"],
         indexes_to_compare=[
             IndexConfig(index_name="hnsw", dimension=384, metric="l2"),
             IndexConfig(index_name="ivf", dimension=384, metric="l2"),
+            IndexConfig(index_name="lsh", dimension=384, metric="l2"),
+            IndexConfig(index_name="pq", dimension=384, metric="l2"),
         ],
         recall_ranks=[1, 5, 10, 30, 50, 100, 200, 500, 800, 1000],
         embedder_config=EmbedderConfig(

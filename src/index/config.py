@@ -22,3 +22,6 @@ class IndexConfig:
     pq_m: int = 8
     pq_bits: int = 8
     sq_bits: int = 8
+
+    # LSH specific
+    lsh_nbits: int = 64
