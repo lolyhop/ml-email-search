@@ -9,7 +9,7 @@ from src.index.config import IndexConfig
 
 @dataclass
 class PipelineConfig:
-    embedder_config: EmbedderConfig
+    embedder_config: tp.Optional[EmbedderConfig] = None
     documents: tp.List[tp.Tuple[int, str]] = field(
         default_factory=list
     )  # (id, content)
@@ -27,3 +27,9 @@ class SearchResult:
 class QualityPipelineConfig(PipelineConfig):
     indexes_to_compare: tp.List[IndexConfig] = field(default_factory=list)
     recall_ranks: tp.List[int] = field(default_factory=list)
+
+
+@dataclass
+class EmbedderPipelineConfig(PipelineConfig):
+    dimensions_to_compare: tp.List[int] = field(default_factory=list)
+    slice_sizes: tp.List[int] = field(default_factory=list)

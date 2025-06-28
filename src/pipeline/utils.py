@@ -23,55 +23,15 @@ def plot_recall_comparison(comparison_results: tp.Dict[str, tp.Any]) -> None:
     plt.savefig("recall_comparison.png", dpi=300, bbox_inches="tight")
 
 
-def plot_time_comparison(comparison_results: tp.Dict[str, tp.Any], ax) -> None:
-    """Plot time per query comparison for different algorithms."""
-    algo_names = list(comparison_results.keys())
-    times = [
-        results["time_per_query"] * 1000 for results in comparison_results.values()
-    ]
-
-    bars = ax.bar(algo_names, times, alpha=0.7)
-    ax.set_ylabel("Time per Query (ms)")
-    ax.set_title("Query Time Comparison")
-    ax.tick_params(axis="x", rotation=45)
-
-    # Add value labels on bars
-    for bar, time_val in zip(bars, times):
-        ax.text(
-            bar.get_x() + bar.get_width() / 2,
-            bar.get_height() + max(times) * 0.01,
-            f"{time_val:.1f}ms",
-            ha="center",
-            va="bottom",
-        )
-
-
-def plot_speed_accuracy_tradeoff(comparison_results: tp.Dict[str, tp.Any], ax) -> None:
-    """Plot speed vs accuracy tradeoff for different algorithms."""
-    algo_names = list(comparison_results.keys())
-    times = [
-        results["time_per_query"] * 1000 for results in comparison_results.values()
-    ]
-    recall_100_values = [
-        results["recall"].get(100, 0) for results in comparison_results.values()
-    ]
-
-    colors = plt.cm.viridis(np.linspace(0, 1, len(algo_names)))
-    scatter = ax.scatter(times, recall_100_values, s=100, c=colors, alpha=0.7)
-
-    # Add algorithm labels
-    for i, algo in enumerate(algo_names):
-        ax.annotate(
-            algo.upper(),
-            (times[i], recall_100_values[i]),
-            xytext=(5, 5),
-            textcoords="offset points",
-            fontsize=9,
-            fontweight="bold",
-        )
-
-    ax.set_xlabel("Time per Query (ms)")
-    ax.set_ylabel("Recall@100")
-    ax.set_title("Speed vs Accuracy Tradeoff")
+def plot_embedder_timings(timings: tp.Dict[str, tp.Dict[str, float]]) -> None:
+    """Plot embedder timings."""
+    fig, ax = plt.subplots(figsize=(10, 6))
+    for head_size, slice_sizes in timings.items():
+        slice_sizes = sorted(slice_sizes.keys())
+        timings = [slice_sizes[k] for k in slice_sizes]
+        ax.plot(slice_sizes, timings, "o-", label=head_size, linewidth=2, markersize=6)
+    ax.set_xlabel("Slice Size")
+    ax.set_ylabel("Time (s)")
+    ax.set_title("microsoft/mpnet-base-109M Timings")
     ax.grid(True, alpha=0.3)
-    ax.set_ylim(0, 1.05)
+    plt.savefig("embedder_timings.png", dpi=300, bbox_inches="tight")

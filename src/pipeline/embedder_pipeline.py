@@ -12,22 +12,21 @@ from src.retrievers.base import EmbedderConfig
 from src.index.base import BaseIndex
 from src.index.factory import IndexFactory
 from src.index.config import IndexConfig
-from src.index.indexes import BruteForceIndex
-from src.pipeline.config import QualityPipelineConfig
+from src.pipeline.config import EmbedderPipelineConfig
 from src.pipeline.metrics import MetricsCalculator
 from src.pipeline.pipeline import Pipeline
 from src.data_loader.data_loader import EmailsDataLoader
-from src.pipeline.utils import plot_recall_comparison
+from src.retrievers.matryoshka import MatryoshkaEmbedder
 
 logger = logging.getLogger(__name__)
-SAVE_REPORTS_PATH = "reports/quality-time"
+SAVE_REPORTS_PATH = "reports/embedder-time"
 
 
 class EmbedderPipeline(Pipeline):
 
-    def __init__(self, config: QualityPipelineConfig) -> None:
+    def __init__(self, config: EmbedderPipelineConfig) -> None:
         super().__init__(config)
-        self.config: QualityPipelineConfig = config
+        self.config: EmbedderPipelineConfig = config
 
     def build_index(self, index_config: IndexConfig) -> BaseIndex:
         """Build the configured index."""
@@ -44,37 +43,31 @@ class EmbedderPipeline(Pipeline):
 
     def run_pipeline(self) -> tp.Any:
         """Run pipeline and return results."""
-        index: BaseIndex = self.build_index(
-            IndexConfig(
-                index_name="brute_force",
-                dimension=self.config.embedder_config.head_size,
-                metric="cosine",
+        embedder_timings = {}
+        for head_size in tqdm(
+            self.config.dimensions_to_compare, desc="Comparing embedder dimensions"
+        ):
+            config = EmbedderConfig(
+                model_name="matryoshka",
+                model_id="tomaarsen/mpnet-base-nli-matryoshka",
+                head_size=head_size,
+                head="document",
+                device="cpu",
             )
-        )
+            print(f"Processing head size: {head_size}")
+            embedder = MatryoshkaEmbedder(config)
+            embedder.initialize()
+            for slice_size in tqdm(
+                self.config.slice_sizes, desc="Processing slice sizes"
+            ):
+                start_time = time.time()
+                embedder.embed_document(self.config.documents[:slice_size])
+                end_time = time.time()
+                if head_size not in embedder_timings:
+                    embedder_timings[head_size] = {}
+                embedder_timings[head_size][slice_size] = end_time - start_time
 
-        results = {}
-        for index in tqdm(self.config.dimensions_to_compare, desc="Comparing embedder dimensions"):
-            index.build_from_corpus(self.corpus, self.embedder)
-            search_start = time.time()
-            results = index.search(
-                # query_embeddings,
-                min(max(self.config.recall_ranks), self.corpus.n_documents),
-            )
-            search_time = time.time() - search_start
-            # 3. Calculate recall@k for each index
-            recall_at_k = MetricsCalculator.calculate_recall_at_k(
-                sota_results[1], results[1], self.config.recall_ranks
-            )
-
-            comparison_results[index.config.index_name] = {
-                "recall": recall_at_k,
-                "search_time": search_time,
-                "time_per_query": search_time / len(self.config.queries),
-            }
-
-        plot_recall_comparison(comparison_results)
-
-        return comparison_results
+        return embedder_timings
 
 
 if __name__ == "__main__":
@@ -82,23 +75,11 @@ if __name__ == "__main__":
         "/Users/egor/Documents/code/ml-email-search/src/data_loader/emails.csv"
     )
     loader.preprocess(raw_email_col="message")
-    documents: tp.List[tp.Tuple[int, str]] = loader.get_faiss_dataset()[:500]
-    config = QualityPipelineConfig(
+    documents: tp.List[tp.Tuple[int, str]] = loader.get_faiss_dataset()
+    config = EmbedderPipelineConfig(
         documents=documents,
-        queries=["What is the capital of France?"],
-        indexes_to_compare=[
-            IndexConfig(index_name="hnsw", dimension=384, metric="l2"),
-            IndexConfig(index_name="ivf", dimension=384, metric="l2"),
-            IndexConfig(index_name="lsh", dimension=384, metric="l2"),
-            IndexConfig(index_name="pq", dimension=384, metric="l2"),
-        ],
-        recall_ranks=[1, 5, 10, 30, 50, 100, 200, 500, 800, 1000],
-        embedder_config=EmbedderConfig(
-            model_name="encoder_model",
-            model_id="sentence-transformers/all-MiniLM-L6-v2",
-            head="universal",
-            head_size=384,
-        ),
+        dimensions_to_compare=[64, 128, 256, 512, 768],
+        slice_sizes=[1000, 5000, 10000, 30000, 50000],
     )
-    pipeline = QualityPipeline(config)
+    pipeline = EmbedderPipeline(config)
     pipeline.run_pipeline()
