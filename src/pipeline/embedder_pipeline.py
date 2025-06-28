@@ -23,8 +23,7 @@ logger = logging.getLogger(__name__)
 SAVE_REPORTS_PATH = "reports/quality-time"
 
 
-class QualityPipeline(Pipeline):
-    """Pipeline for running end-to-end quality experiment."""
+class EmbedderPipeline(Pipeline):
 
     def __init__(self, config: QualityPipelineConfig) -> None:
         super().__init__(config)
@@ -45,43 +44,20 @@ class QualityPipeline(Pipeline):
 
     def run_pipeline(self) -> tp.Any:
         """Run pipeline and return results."""
-        self.setup()
-        sota_index_config = IndexConfig(
-            index_name="brute_force",
-            dimension=self.config.embedder_config.head_size,
-            metric="l2",
+        index: BaseIndex = self.build_index(
+            IndexConfig(
+                index_name="brute_force",
+                dimension=self.config.embedder_config.head_size,
+                metric="cosine",
+            )
         )
-        sota_index: BruteForceIndex = IndexFactory.create(sota_index_config)
 
-        indexes_to_compare: tp.List[BaseIndex] = [
-            IndexFactory.create(index_config)
-            for index_config in self.config.indexes_to_compare
-        ]
-
-        # 1. Get SOTA results for retrieval using brute force index
-        sota_index.build_from_corpus(self.corpus, self.embedder)
-        query_embeddings = self.embedder.embed_query(self.config.queries)
-
-        search_start = time.time()
-        sota_results = sota_index.search(
-            query_embeddings,
-            min(max(self.config.recall_ranks), self.corpus.n_documents),
-        )
-        search_time_sota = time.time() - search_start
-        comparison_results = {
-            "brute_force": {
-                "recall": {k: 1.0 for k in self.config.recall_ranks},
-                "search_time": search_time_sota,
-                "time_per_query": search_time_sota / len(self.config.queries),
-            }
-        }
-
-        # 2. Get results for retrieval using other indexes
-        for index in tqdm(indexes_to_compare, desc="Comparing indexes"):
+        results = {}
+        for index in tqdm(self.config.dimensions_to_compare, desc="Comparing embedder dimensions"):
             index.build_from_corpus(self.corpus, self.embedder)
             search_start = time.time()
             results = index.search(
-                query_embeddings,
+                # query_embeddings,
                 min(max(self.config.recall_ranks), self.corpus.n_documents),
             )
             search_time = time.time() - search_start
@@ -106,7 +82,7 @@ if __name__ == "__main__":
         "/Users/egor/Documents/code/ml-email-search/src/data_loader/emails.csv"
     )
     loader.preprocess(raw_email_col="message")
-    documents: tp.List[tp.Tuple[int, str]] = loader.get_faiss_dataset()
+    documents: tp.List[tp.Tuple[int, str]] = loader.get_faiss_dataset()[:500]
     config = QualityPipelineConfig(
         documents=documents,
         queries=["What is the capital of France?"],
@@ -116,7 +92,7 @@ if __name__ == "__main__":
             IndexConfig(index_name="lsh", dimension=384, metric="l2"),
             IndexConfig(index_name="pq", dimension=384, metric="l2"),
         ],
-        recall_ranks=[1, 5, 10, 30, 50, 100, 200, 500],
+        recall_ranks=[1, 5, 10, 30, 50, 100, 200, 500, 800, 1000],
         embedder_config=EmbedderConfig(
             model_name="encoder_model",
             model_id="sentence-transformers/all-MiniLM-L6-v2",
