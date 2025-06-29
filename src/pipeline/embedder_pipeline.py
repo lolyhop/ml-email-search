@@ -61,7 +61,9 @@ class EmbedderPipeline(Pipeline):
                 self.config.slice_sizes, desc="Processing slice sizes"
             ):
                 start_time = time.time()
-                embedder.embed_document(self.config.documents[:slice_size])
+                embedder.embed_document(
+                    self.config.documents[:slice_size], batch_size=8
+                )
                 end_time = time.time()
                 if head_size not in embedder_timings:
                     embedder_timings[head_size] = {}
