@@ -31,7 +31,7 @@ class QualityPipelineConfig(PipelineConfig):
 
 @dataclass
 class EmbedderPipelineConfig(PipelineConfig):
-    dimensions_to_compare: tp.List[int] = field(default_factory=list)
+    model_ids_to_compare: tp.List[str] = field(default_factory=list)
     slice_sizes: tp.List[int] = field(default_factory=list)
 
 

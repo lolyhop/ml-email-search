@@ -16,7 +16,7 @@ from src.index.config import IndexConfig
 from src.pipeline.config import EmbedderPipelineConfig
 from src.pipeline.pipeline import Pipeline
 from src.data_loader.data_loader import EmailsDataLoader
-from src.retrievers.matryoshka import MatryoshkaEmbedder
+from src.retrievers.dense import DenseEmbedder
 
 logger = logging.getLogger(__name__)
 SAVE_REPORTS_PATH = "reports/embedder-time"
@@ -44,18 +44,17 @@ class EmbedderPipeline(Pipeline):
     def run_pipeline(self) -> tp.Any:
         """Run pipeline and return results."""
         embedder_timings = {}
-        for head_size in tqdm(
-            self.config.dimensions_to_compare, desc="Comparing embedder dimensions"
+        for model_id in tqdm(
+            self.config.model_ids_to_compare, desc="Comparing embedder dimensions"
         ):
             config = EmbedderConfig(
-                model_name="matryoshka",
-                model_id="tomaarsen/mpnet-base-nli-matryoshka",
-                head_size=head_size,
+                model_name="dense",
+                model_id=model_id,
                 head="document",
-                device="cpu",
+                device="cuda",
             )
-            print(f"Processing head size: {head_size}")
-            embedder = MatryoshkaEmbedder(config)
+            print(f"Processing model: {model_id}")
+            embedder = DenseEmbedder(config)
             embedder.initialize()
             for slice_size in tqdm(
                 self.config.slice_sizes, desc="Processing slice sizes"
@@ -65,27 +64,27 @@ class EmbedderPipeline(Pipeline):
                     self.config.documents[:slice_size], batch_size=8
                 )
                 end_time = time.time()
-                if head_size not in embedder_timings:
-                    embedder_timings[head_size] = {}
-                embedder_timings[head_size][slice_size] = end_time - start_time
+                if model_id not in embedder_timings:
+                    embedder_timings[model_id] = {}
+                embedder_timings[model_id][slice_size] = end_time - start_time
 
         with open("output.json", "w") as file:
-            file.write(
-                json.dumps(embedder_timings, ensure_ascii=False, indent=4)
-            )
+            file.write(json.dumps(embedder_timings, ensure_ascii=False, indent=4))
 
         return embedder_timings
 
 
 if __name__ == "__main__":
-    loader = EmailsDataLoader.load(
-        "~/ml-email-search/src/data_loader/emails.csv"
-    )
+    loader = EmailsDataLoader.load("~/ml-email-search/src/data_loader/emails.csv")
     loader.preprocess(raw_email_col="message")
     documents: tp.List[tp.Tuple[int, str]] = loader.get_faiss_dataset()
     config = EmbedderPipelineConfig(
         documents=documents,
-        dimensions_to_compare=[64, 128, 256, 512, 768],
+        model_ids_to_compare=[
+            "intfloat/e5-small-v2",
+            "intfloat/e5-base-v2",
+            "intfloat/e5-large-v2",
+        ],
         slice_sizes=[1000, 5000, 10000, 30000, 50000],
     )
     pipeline = EmbedderPipeline(config)
