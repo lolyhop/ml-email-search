@@ -3,6 +3,7 @@ import os
 os.environ["OMP_NUM_THREADS"] = "1"
 
 import time
+import json
 import logging
 import typing as tp
 
@@ -13,7 +14,6 @@ from src.index.base import BaseIndex
 from src.index.factory import IndexFactory
 from src.index.config import IndexConfig
 from src.pipeline.config import EmbedderPipelineConfig
-from src.pipeline.metrics import MetricsCalculator
 from src.pipeline.pipeline import Pipeline
 from src.data_loader.data_loader import EmailsDataLoader
 from src.retrievers.matryoshka import MatryoshkaEmbedder
@@ -69,12 +69,17 @@ class EmbedderPipeline(Pipeline):
                     embedder_timings[head_size] = {}
                 embedder_timings[head_size][slice_size] = end_time - start_time
 
+        with open("output.json", "w") as file:
+            file.write(
+                json.dumps(embedder_timings, ensure_ascii=False, indent=4)
+            )
+
         return embedder_timings
 
 
 if __name__ == "__main__":
     loader = EmailsDataLoader.load(
-        "/Users/egor/Documents/code/ml-email-search/src/data_loader/emails.csv"
+        "~/ml-email-search/src/data_loader/emails.csv"
     )
     loader.preprocess(raw_email_col="message")
     documents: tp.List[tp.Tuple[int, str]] = loader.get_faiss_dataset()

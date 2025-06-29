@@ -1,4 +1,3 @@
-import time
 import abc
 import logging
 import typing as tp
@@ -6,8 +5,6 @@ import typing as tp
 from src.retrievers.base import Embedder
 from src.retrievers.dense import DenseEmbedder
 from src.retrievers.dummy import DummyEmbedder
-from src.index.base import BaseIndex
-from src.index.factory import IndexFactory
 from src.index.entity import FaissEntity, FaissCorpus
 from src.pipeline.config import PipelineConfig
 

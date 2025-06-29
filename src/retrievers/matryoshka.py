@@ -18,10 +18,10 @@ class MatryoshkaEmbedder(Embedder):
         self.is_initialized = True
 
     def embed_query(self, query: tp.List[str], **kwargs) -> np.ndarray:
-        return self.model.encode(query, kwargs.get("batch_size", 1))
+        return self.model.encode(query, batch_size=kwargs.get("batch_size", 1))
 
     def embed_document(self, document: tp.List[str], **kwargs) -> np.ndarray:
-        return self.model.encode(document, kwargs.get("batch_size", 1))
+        return self.model.encode(document, batch_size=kwargs.get("batch_size", 1))
 
 
 if __name__ == "__main__":
