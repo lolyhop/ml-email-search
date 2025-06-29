@@ -39,3 +39,11 @@ class EmbedderPipelineConfig(PipelineConfig):
 class BuildTimePipelineConfig(PipelineConfig):
     indexes_to_compare: tp.List[IndexConfig] = field(default_factory=list)
     slice_sizes: tp.List[int] = field(default_factory=list)
+
+
+@dataclass
+class SearchTimePipelineConfig(PipelineConfig):
+    indexes_to_compare: tp.List[IndexConfig] = field(default_factory=list)
+    queries: tp.List[str] = field(default_factory=list)
+    slice_sizes: tp.List[int] = field(default_factory=list)
+    k_list: tp.List[int] = field(default_factory=list)
