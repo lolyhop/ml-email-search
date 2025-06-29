@@ -1,6 +1,5 @@
 import typing as tp
 
-import numpy as np
 import matplotlib.pyplot as plt
 
 
@@ -35,3 +34,31 @@ def plot_embedder_timings(timings: tp.Dict[str, tp.Dict[str, float]]) -> None:
     ax.set_title("microsoft/mpnet-base-109M Timings")
     ax.grid(True, alpha=0.3)
     plt.savefig("embedder_timings.png", dpi=300, bbox_inches="tight")
+
+
+def plot_build_time_comparison(timings: tp.Dict[str, float]) -> None:
+    """Plot build time comparison."""
+    # Parse the timings to group by index type
+    index_data = {}
+    for key, timing in timings.items():
+        # Split key like "brute_force_1000" into index_name and corpus_size
+        parts = key.rsplit('_', 1)
+        index_name = parts[0]
+        corpus_size = int(parts[1])
+        
+        if index_name not in index_data:
+            index_data[index_name] = {}
+        index_data[index_name][corpus_size] = timing
+    
+    fig, ax = plt.subplots(figsize=(10, 6))
+    for index_name, size_timings in index_data.items():
+        corpus_sizes = sorted(size_timings.keys())
+        timing_values = [size_timings[size] for size in corpus_sizes]
+        ax.plot(corpus_sizes, timing_values, "o-", label=index_name, linewidth=2, markersize=6)
+    
+    ax.set_xlabel("Corpus Size")
+    ax.set_ylabel("Time (s)")
+    ax.set_title("Build Time Comparison")
+    ax.grid(True, alpha=0.3)
+    ax.legend()
+    plt.savefig("build_time_comparison.png", dpi=300, bbox_inches="tight")

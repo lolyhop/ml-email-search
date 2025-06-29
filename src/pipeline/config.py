@@ -33,3 +33,9 @@ class QualityPipelineConfig(PipelineConfig):
 class EmbedderPipelineConfig(PipelineConfig):
     dimensions_to_compare: tp.List[int] = field(default_factory=list)
     slice_sizes: tp.List[int] = field(default_factory=list)
+
+
+@dataclass
+class BuildTimePipelineConfig(PipelineConfig):
+    indexes_to_compare: tp.List[IndexConfig] = field(default_factory=list)
+    slice_sizes: tp.List[int] = field(default_factory=list)

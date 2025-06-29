@@ -31,6 +31,20 @@ class FaissCorpus:
         if len(ids) != len(set(ids)):
             raise ValueError("Duplicate document IDs found in corpus")
 
+    def __getitem__(
+        self, key: tp.Union[int, slice]
+    ) -> tp.Union[FaissEntity, "FaissCorpus"]:
+        if isinstance(key, int):
+            return self.entities[key]
+        elif isinstance(key, slice):
+            return FaissCorpus(entities=self.entities[key])
+        else:
+            raise TypeError(f"Invalid key type: {type(key)}")
+
+    def __len__(self) -> int:
+        """Return the number of entities in the corpus."""
+        return len(self.entities)
+
     @property
     def n_documents(self) -> int:
         return len(self.entities)
