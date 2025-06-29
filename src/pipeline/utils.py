@@ -25,20 +25,20 @@ def plot_recall_comparison(comparison_results: tp.Dict[str, tp.Any]) -> None:
 def plot_embedder_timings(timings: tp.Dict[str, tp.Dict[str, float]]) -> None:
     """Plot embedder timings."""
     fig, ax = plt.subplots(figsize=(10, 6))
-    for head_size, slice_timings in timings.items():
+    for model_name, slice_timings in timings.items():
         slice_sizes = sorted([int(k) for k in slice_timings.keys()])
         timing_values = [slice_timings[str(k)] for k in slice_sizes]
         ax.plot(
             slice_sizes,
             timing_values,
             "o-",
-            label=f"Embedding Dimension: {head_size}",
+            label=model_name,
             linewidth=2,
             markersize=6,
         )
     ax.set_xlabel("Corpus Size")
     ax.set_ylabel("Time to embed corpus (s)")
-    ax.set_title("microsoft/mpnet-base-109M Timings")
+    ax.set_title("Embedder Timings")
     ax.grid(True, alpha=0.3)
     ax.legend()
     plt.savefig("embedder_timings.png", dpi=300, bbox_inches="tight")

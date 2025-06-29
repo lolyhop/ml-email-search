@@ -61,8 +61,8 @@ class EmbedderPipeline(Pipeline):
             ):
                 start_time = time.time()
                 embedder.embed_document(
-                    [self.config.documents[i][1] for i in range(slice_size)],
-                    batch_size=8,
+                    [self.config.documents[i][1] for i in range(min(slice_size, len(self.config.documents)))],
+                    batch_size=4,
                 )
                 end_time = time.time()
                 if model_id not in embedder_timings:

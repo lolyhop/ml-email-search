@@ -47,3 +47,7 @@ class SearchTimePipelineConfig(PipelineConfig):
     queries: tp.List[str] = field(default_factory=list)
     slice_sizes: tp.List[int] = field(default_factory=list)
     k_list: tp.List[int] = field(default_factory=list)
+
+@dataclass
+class QuantizationPipelineConfig(PipelineConfig):
+    ...
