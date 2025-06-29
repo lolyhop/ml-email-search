@@ -62,16 +62,31 @@ class DenseEmbedder(Embedder):
 
         return embeddings.cpu().float().numpy()
 
-    def embed_query(self, query: tp.List[str]) -> tp.Union[np.ndarray, torch.Tensor]:
+    def _embed_texts(self, texts: tp.List[str], batch_size: int = 32) -> np.ndarray:
+        if not texts:
+            return np.array([])
+
+        all_embeddings = []
+
+        for i in range(0, len(texts), batch_size):
+            batch = texts[i : i + batch_size]
+            batch_embeddings = self._embed_batch(batch)
+            all_embeddings.append(batch_embeddings)
+
+        return np.vstack(all_embeddings)
+
+    def embed_query(
+        self, query: tp.List[str], batch_size: int = 32
+    ) -> tp.Union[np.ndarray, torch.Tensor]:
         assert (
             self.config.head == "query" or self.config.head == "universal"
         ), "Expected head to be 'query' for query embedding"
-        return self._embed_batch(query)
+        return self._embed_texts(query, batch_size)
 
     def embed_document(
-        self, document: tp.List[str]
+        self, document: tp.List[str], batch_size: int = 32
     ) -> tp.Union[np.ndarray, torch.Tensor]:
         assert (
             self.config.head == "doc" or self.config.head == "universal"
         ), "Expected head to be 'doc' for document embedding"
-        return self._embed_batch(document)
+        return self._embed_texts(document, batch_size)
