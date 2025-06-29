@@ -87,6 +87,6 @@ class DenseEmbedder(Embedder):
         self, document: tp.List[str], batch_size: int = 32
     ) -> tp.Union[np.ndarray, torch.Tensor]:
         assert (
-            self.config.head == "doc" or self.config.head == "universal"
+            self.config.head == "document" or self.config.head == "universal"
         ), "Expected head to be 'doc' for document embedding"
         return self._embed_texts(document, batch_size)
