@@ -5,6 +5,7 @@ os.environ["OMP_NUM_THREADS"] = "1"
 import time
 import logging
 import typing as tp
+import json
 
 from tqdm import tqdm
 
@@ -17,7 +18,6 @@ from src.pipeline.config import QualityPipelineConfig
 from src.pipeline.metrics import MetricsCalculator
 from src.pipeline.pipeline import Pipeline
 from src.data_loader.data_loader import EmailsDataLoader
-from src.pipeline.utils import plot_recall_comparison
 
 logger = logging.getLogger(__name__)
 SAVE_REPORTS_PATH = "reports/quality-time"
@@ -90,13 +90,16 @@ class QualityPipeline(Pipeline):
                 sota_results[1], results[1], self.config.recall_ranks
             )
 
-            comparison_results[index.config.index_name] = {
+            comparison_results[
+                f"{index.config.index_name}-{index.config.quantization}"
+            ] = {
                 "recall": recall_at_k,
                 "search_time": search_time,
                 "time_per_query": search_time / len(self.config.queries),
             }
 
-        plot_recall_comparison(comparison_results)
+        with open("quality_results.json", "w") as file:
+            file.write(json.dumps(comparison_results, ensure_ascii=False, indent=4))
 
         return comparison_results
 
@@ -106,15 +109,29 @@ if __name__ == "__main__":
         "/Users/egor/Documents/code/ml-email-search/src/data_loader/emails.csv"
     )
     loader.preprocess(raw_email_col="message")
-    documents: tp.List[tp.Tuple[int, str]] = loader.get_faiss_dataset()
+    documents: tp.List[tp.Tuple[int, str]] = loader.get_faiss_dataset()[:650]
     config = QualityPipelineConfig(
         documents=documents,
         queries=["What is the capital of France?"],
         indexes_to_compare=[
-            IndexConfig(index_name="hnsw", dimension=384, metric="l2"),
-            IndexConfig(index_name="ivf", dimension=384, metric="l2"),
-            IndexConfig(index_name="lsh", dimension=384, metric="l2"),
-            IndexConfig(index_name="pq", dimension=384, metric="l2"),
+            IndexConfig(
+                index_name="ivf", dimension=384, metric="l2", quantization="none"
+            ),
+            IndexConfig(
+                index_name="ivf",
+                dimension=384,
+                metric="l2",
+                quantization="pq",
+                pq_m=8,
+                pq_bits=8,
+            ),
+            IndexConfig(
+                index_name="ivf",
+                dimension=384,
+                metric="l2",
+                quantization="sq",
+                sq_bits=8,
+            ),
         ],
         recall_ranks=[1, 5, 10, 30, 50, 100, 200, 500],
         embedder_config=EmbedderConfig(

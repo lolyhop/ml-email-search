@@ -77,7 +77,7 @@ class IVFIndex(BaseIndex):
                 quantizer,
                 self.config.dimension,
                 self.config.ivf_nlist,
-                faiss.ScalarQuantizer.QT_8bit,
+                faiss.ScalarQuantizer.QT_4bit,
                 metric,
             )
         else:
@@ -125,22 +125,26 @@ class PQIndex(BaseIndex):
     def build(self) -> None:
         if self.config.metric == "cosine":
             self.index = faiss.IndexPQ(
-                self.config.dimension, self.config.pq_m, self.config.pq_bits,
-                faiss.METRIC_INNER_PRODUCT
+                self.config.dimension,
+                self.config.pq_m,
+                self.config.pq_bits,
+                faiss.METRIC_INNER_PRODUCT,
             )
         else:
             self.index = faiss.IndexPQ(
-                self.config.dimension, self.config.pq_m, self.config.pq_bits,
-                faiss.METRIC_L2
+                self.config.dimension,
+                self.config.pq_m,
+                self.config.pq_bits,
+                faiss.METRIC_L2,
             )
 
     def add(self, embeddings: np.ndarray) -> None:
         embeddings = self._prepare_embeddings(embeddings)
-        
+
         if not self._is_trained:
             self.index.train(embeddings)
             self._is_trained = True
-            
+
         self.index.add(embeddings)
 
     def search(

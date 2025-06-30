@@ -8,8 +8,8 @@ def plot_recall_comparison(comparison_results: tp.Dict[str, tp.Any]) -> None:
     fig, ax = plt.subplots(figsize=(10, 6))
     for algo_name, results in comparison_results.items():
         recalls = results["recall"]
-        k_values = sorted(recalls.keys())
-        recall_values = [recalls[k] for k in k_values]
+        k_values = sorted([int(k) for k in recalls.keys()])
+        recall_values = [recalls[str(k)] for k in k_values]
         ax.plot(
             k_values, recall_values, "o-", label=algo_name, linewidth=2, markersize=6
         )
@@ -117,3 +117,61 @@ def plot_search_time_comparison(timings: tp.Dict[str, float]) -> None:
             f"search_time_comparison_{index_name}.png", dpi=300, bbox_inches="tight"
         )
         plt.show()
+
+
+def plot_quantization_comparison(timings: tp.Dict[str, float]) -> None:
+    """Plot quantization comparison."""
+    index_data = {}
+    for key, timing in timings.items():
+        parts = key.split("_")
+        index_name = parts[0].split(":")[1]
+        quantization = parts[1].split(":")[1]
+        corpus_size = int(parts[2].split(":")[1])
+        k = int(parts[3].split(":")[1])
+        n_queries = int(parts[4].split(":")[1])
+
+        queries_per_second = n_queries / timing if timing > 0 else 0
+
+        if quantization not in index_data:
+            index_data[quantization] = {}
+        if corpus_size not in index_data[quantization]:
+            index_data[quantization][corpus_size] = {}
+        index_data[quantization][corpus_size][k] = queries_per_second
+
+    fig, ax = plt.subplots(figsize=(10, 6))
+
+    quantization_methods = list(index_data.keys())
+    corpus_sizes = set()
+    for quantization in index_data:
+        corpus_sizes.update(index_data[quantization].keys())
+    corpus_sizes = sorted(corpus_sizes)
+
+    for quantization in quantization_methods:
+        avg_qps_by_size = []
+        for corpus_size in corpus_sizes:
+            if corpus_size in index_data[quantization]:
+                qps_for_size = list(index_data[quantization][corpus_size].values())
+                avg_qps_by_size.append(
+                    sum(qps_for_size) / len(qps_for_size) if qps_for_size else 0
+                )
+            else:
+                avg_qps_by_size.append(0)
+
+        ax.plot(
+            corpus_sizes,
+            avg_qps_by_size,
+            marker="s",
+            linewidth=2,
+            markersize=6,
+            label=quantization,
+        )
+
+    ax.set_xlabel("Corpus Size")
+    ax.set_ylabel("Queries per Second")
+    ax.set_title("Performance vs Corpus Size by Quantization")
+    ax.legend()
+    ax.grid(True, alpha=0.3)
+
+    plt.tight_layout()
+    plt.savefig("quantization_performance_analysis.png", dpi=300, bbox_inches="tight")
+    plt.show()
