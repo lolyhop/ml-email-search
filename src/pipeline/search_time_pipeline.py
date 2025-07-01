@@ -36,12 +36,14 @@ class SearchTimePipeline(Pipeline):
     def run_pipeline(self) -> tp.Any:
         """Run pipeline and return results."""
         search_timings = {}
-        embedder = DummyEmbedder(self.config.embedder_config)
-        embedder.initialize()
+
 
         self.corpus = self._create_corpus()
 
         for index_config in tqdm(self.config.indexes_to_compare):
+            embedder = DummyEmbedder(self.config.embedder_config)
+            embedder.initialize()
+            embedder.config.head_size = index_config.dimension
             for corpus_size in self.config.slice_sizes:
                 index = self.build_index(index_config)
                 index.build_from_corpus(self.corpus[:corpus_size], embedder)
@@ -51,10 +53,10 @@ class SearchTimePipeline(Pipeline):
                     index.search(queries, k)
                     search_time = time.time() - start_time
                     search_timings[
-                        f"index:{index_config.index_name}_corpus_size:{corpus_size}_k:{k}_n_queries:{len(self.config.queries)}"
+                        f"index:{index_config.index_name}_corpus-size:{corpus_size}_k:{k}_n-queries:{len(self.config.queries)}_dimension:{index_config.dimension}"
                     ] = search_time
 
-        with open("output.json", "w") as file:
+        with open("search_time_results.json", "w") as file:
             file.write(json.dumps(search_timings, ensure_ascii=False, indent=4))
 
         return search_timings
@@ -69,7 +71,7 @@ if __name__ == "__main__":
 
     config = SearchTimePipelineConfig(
         documents=documents,
-        slice_sizes=[1000, 5000, 10000, 30000, 50000],
+        slice_sizes=[50000],
         indexes_to_compare=[
             IndexConfig(index_name="brute_force", dimension=384, metric="l2"),
             IndexConfig(index_name="hnsw", dimension=384, metric="l2"),

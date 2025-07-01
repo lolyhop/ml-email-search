@@ -135,8 +135,8 @@ if __name__ == "__main__":
         ],
         recall_ranks=[1, 5, 10, 30, 50, 100, 200, 500],
         embedder_config=EmbedderConfig(
-            model_name="encoder_model",
-            model_id="sentence-transformers/all-MiniLM-L6-v2",
+            model_name="dummy_model",
+            model_id="dummy",
             head="universal",
             head_size=384,
         ),
