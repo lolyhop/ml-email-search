@@ -109,7 +109,7 @@ if __name__ == "__main__":
         "/Users/egor/Documents/code/ml-email-search/src/data_loader/emails.csv"
     )
     loader.preprocess(raw_email_col="message")
-    documents: tp.List[tp.Tuple[int, str]] = loader.get_faiss_dataset()[:650]
+    documents: tp.List[tp.Tuple[int, str]] = loader.get_faiss_dataset()
     config = QualityPipelineConfig(
         documents=documents,
         queries=["What is the capital of France?"],
